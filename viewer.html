@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Beauty</title>
+    <link rel="stylesheet" href="css/style.css">
+</head><body class="viewer-body">
+    <div id="viewer-app">
+        <div class="viewer-toolbar">
+            <button class="btn btn-back" onclick="history.back()">Back to List</button>
+            <h3 id="file-name" style="color: #f8fafc; font-size: 1rem; max-width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Loading...</h3>
+            <a id="download-btn" class="btn btn-download" href="#">Download HTML</a>
+        </div>
+        <iframe id="viewer-frame" class="viewer-frame" src="about:blank"></iframe>
+    </div>
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

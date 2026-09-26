@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>朱利亚集 · 霓虹花园</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    height:100%;overflow:hidden;background:#020008;
+    font-family:"Helvetica Neue",Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #gl{display:block;position:fixed;inset:0;width:100vw;height:100vh;}
+
+  #vignette{
+    position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(ellipse at 50% 50%,
+      transparent 30%,
+      rgba(2,0,8,.30) 60%,
+      rgba(0,0,0,.88) 100%);
+  }
+
+  #ui{position:fixed;inset:0;pointer-events:none;z-index:5;}
+
+  /* ---------- 左上标题 ---------- */
+  #title{
+    position:absolute;top:0;left:0;
+    padding:30px 42px;
+    opacity:0;animation:fade 2.2s .5s ease forwards;
+  }
+  #title h1{
+    font-size:clamp(17px,2.2vw,28px);
+    font-weight:200;
+    letter-spacing:.44em;text-indent:.44em;
+    background:linear-gradient(96deg,#ff5ec8 0%,#c46eff 40%,#5ee8ff 72%,#b6ff8a 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;
+    margin-bottom:12px;
+    filter:drop-shadow(0 0 28px rgba(255,100,220,.52));
+  }
+  #title .en{
+    font-size:9px;letter-spacing:.54em;text-indent:.54em;
+    color:rgba(255,150,220,.32);
+    margin-bottom:12px;
+  }
+  #title .sub{
+    font-size:10px;letter-spacing:.20em;line-height:1.9;
+    color:rgba(220,180,255,.26);font-weight:300;
+  }
+
+  /* ---------- 右上参数 ---------- */
+  #stats{
+    position:absolute;top:0;right:0;
+    padding:30px 42px;
+    text-align:right;
+    opacity:0;animation:fade 2.2s 1.0s ease forwards;
+    font-family:"SF Mono",Consolas,Monaco,"Courier New",monospace;
+    font-size:9.5px;letter-spacing:.18em;line-height:2.0;
+  }
+  #stats .lab{
+    display:block;font-size:8px;
+    letter-spacing:.44em;text-indent:.44em;
+    color:rgba(255,140,220,.22);
+    margin-bottom:10px;
+  }
+  #stats .row{display:flex;justify-content:flex-end;gap:14px;}
+  #stats .k{color:rgba(220,180,255,.34);}
+  #stats .v{
+    color:rgba(255,220,250,.72);
+    min-width:86px;text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  #stats .v.cr{color:rgba(255,120,200,.85);}
+  #stats .v.ci{color:rgba(120,220,255,.85);}
+  #stats .v.it{color:rgba(180,255,140,.78);}
+  #stats .sep{
+    height:1px;margin:10px 0;
+    background:linear-gradient(90deg,
+      rgba(255,140,220,0) 0%,
+      rgba(255,140,220,.16) 50%,
+      rgba(255,140,220,0) 100%);
+  }
+
+  /* ---------- 左下公式 ---------- */
+  #formula{
+    position:absolute;bottom:0;left:0;
+    padding:0 42px 120px;
+    opacity:0;animation:fade 2.2s 1.2s ease forwards;
+    font-family:"SF Mono",Consolas,Monaco,"Courier New",monospace;
+    font-size:clamp(9px,1.0vw,11px);
+    line-height:2.0;
+    letter-spacing:.02em;
+    color:rgba(200,180,255,.28);
+    max-width:min(480px,52vw);
+  }
+  #formula .lab{
+    display:block;font-size:8px;
+    letter-spacing:.44em;text-indent:.44em;
+    color:rgba(180,140,255,.20);
+    margin-bottom:10px;
+  }
+  #formula .kw{color:rgba(255,120,220,.58);}
+  #formula .fn{color:rgba(120,230,255,.52);}
+  #formula .nm{color:rgba(200,180,255,.54);}
+  #formula .op{color:rgba(180,160,240,.26);}
+  #formula .cm{color:rgba(140,120,210,.20);font-style:italic;}
+
+  /* ---------- 右下提示 ---------- */
+  #hint{
+    position:absolute;bottom:0;right:0;
+    padding:0 42px 120px;
+    text-align:right;
+    opacity:0;animation:fade 2.2s 1.4s ease forwards;
+  }
+  #hint .big{
+    font-size:clamp(9.5px,1.0vw,12px);
+    letter-spacing:.30em;text-indent:.30em;
+    color:rgba(255,160,230,.40);
+    margin-bottom:10px;font-weight:300;
+  }
+  #hint .small{
+    font-family:"SF Mono",Consolas,Monaco,monospace;
+    font-size:8.5px;letter-spacing:.18em;
+    color:rgba(180,160,240,.24);
+    line-height:1.95;
+  }
+  #hint .key{
+    display:inline-block;
+    padding:1px 6px;margin:0 2px;
+    border:1px solid rgba(180,160,240,.20);
+    border-radius:3px;
+    color:rgba(230,210,255,.46);
+  }
+
+  /* ---------- 底部控制面板 ---------- */
+  #panel{
+    position:absolute;
+    left:50%;bottom:26px;
+    transform:translateX(-50%);
+    width:min(720px, 92vw);
+    padding:20px 26px 16px;
+    border-radius:18px;
+    background:linear-gradient(180deg,
+      rgba(28,10,42,.68), rgba(14,6,26,.78));
+    border:1px solid rgba(255,120,220,.16);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    box-shadow:
+      0 0 46px rgba(200,60,180,.14),
+      inset 0 1px 0 rgba(255,180,240,.08);
+    opacity:0;animation:fade 2.2s 1.6s ease forwards;
+    pointer-events:auto;
+    transition:border-color .5s;
+  }
+  #panel:hover{
+    border-color:rgba(255,150,230,.32);
+  }
+
+  .row{
+    display:flex;align-items:center;gap:14px;
+    margin-bottom:12px;
+  }
+  .row:last-child{margin-bottom:0;}
+
+  .row .tag{
+    font-family:"SF Mono",Consolas,Monaco,monospace;
+    font-size:9.5px;letter-spacing:.20em;
+    color:rgba(255,160,230,.52);
+    min-width:52px;
+    text-align:right;
+  }
+  .row .tag.ci{color:rgba(120,220,255,.62);}
+  .row .tag.it{color:rgba(180,255,140,.62);}
+
+  .row .num{
+    font-family:"SF Mono",Consolas,Monaco,monospace;
+    font-size:11px;letter-spacing:.08em;
+    color:rgba(255,230,250,.88);
+    min-width:74px;
+    text-align:left;
+    font-variant-numeric:tabular-nums;
+    font-weight:500;
+  }
+
+  /* 自定义滑块 */
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    flex:1;height:4px;border-radius:2px;
+    background:rgba(255,140,220,.12);
+    outline:none;cursor:pointer;
+    position:relative;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:16px;height:16px;border-radius:50%;
+    background:radial-gradient(circle at 35% 32%,
+      #fff2fc, #ff5ec8 60%, #b4308a 100%);
+    border:none;
+    box-shadow:
+      0 0 14px rgba(255,80,200,.85),
+      0 0 28px rgba(255,80,200,.42);
+    cursor:pointer;
+    transition:transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{
+    transform:scale(1.12);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;border:none;
+    background:radial-gradient(circle at 35% 32%,
+      #fff2fc, #ff5ec8 60%, #b4308a 100%);
+    box-shadow:
+      0 0 14px rgba(255,80,200,.85),
+      0 0 28px rgba(255,80,200,.42);
+    cursor:pointer;
+  }
+
+  input[type=range].ci::-webkit-slider-thumb{
+    background:radial-gradient(circle at 35% 32%,
+      #f0fbff, #5ec8ff 60%, #1e78c8 100%);
+    box-shadow:
+      0 0 14px rgba(94,200,255,.85),
+      0 0 28px rgba(94,200,255,.42);
+  }
+  input[type=range].ci::-moz-range-thumb{
+    background:radial-gradient(circle at 35% 32%,
+      #f0fbff, #5ec8ff 60%, #1e78c8 100%);
+    box-shadow:
+      0 0 14px rgba(94,200,255,.85),
+      0 0 28px rgba(94,200,255,.42);
+  }
+
+  input[type=range].it::-webkit-slider-thumb{
+    background:radial-gradient(circle at 35% 32%,
+      #f4ffe8, #a8ff5e 60%, #4a9e18 100%);
+    box-shadow:
+      0 0 14px rgba(168,255,94,.85),
+      0 0 28px rgba(168,255,94,.42);
+  }
+  input[type=range].it::-moz-range-thumb{
+    background:radial-gradient(circle at 35% 32%,
+      #f4ffe8, #a8ff5e 60%, #4a9e18 100%);
+    box-shadow:
+      0 0 14px rgba(168,255,94,.85),
+      0 0 28px rgba(168,255,94,.42);
+  }
+
+  .presetBar{
+    display:flex;gap:7px;justify-content:center;
+    margin-top:14px;padding-top:12px;
+    border-top:1px solid rgba(255,140,220,.10);
+    flex-wrap:wrap;
+  }
+  .pBtn{
+    font-family:"SF Mono",Consolas,Monaco,monospace;
+    font-size:8.5px;letter-spacing:.16em;
+    color:rgba(255,190,240,.55);
+    background:rgba(60,20,80,.32);
+    border:1px solid rgba(255,140,220,.18);
+    border-radius:999px;
+    padding:6px 13px;
+    cursor:pointer;
+    transition:.32s cubic-bezier(.4,0,.2,1);
+    white-space:nowrap;
+  }
+  .pBtn:hover{
+    border-color:rgba(255,180,240,.72);
+    background:rgba(140,50,160,.28);
+    color:rgba(255,220,250,.92);
+    box-shadow:0 0 20px rgba(255,120,220,.28);
+  }
+  .pBtn:active{transform:scale(.96);}
+
+  /* ---------- 开场遮罩 ---------- */
+  #overlay{
+    position:fixed;inset:0;z-index:20;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:26px;padding:28px;text-align:center;
+    background:radial-gradient(ellipse at 50% 46%,
+      rgba(38,10,56,.92), rgba(2,0,8,.99) 74%);
+    transition:opacity 1.0s ease, visibility 1.0s;
+  }
+  #overlay.hide{opacity:0;visibility:hidden;pointer-events:none;}
+
+  #overlay h1{
+    font-size:clamp(24px,3.6vw,46px);
+    font-weight:200;letter-spacing:.34em;text-indent:.34em;
+    background:linear-gradient(96deg,#ff5ec8 0%,#c46eff 40%,#5ee8ff 72%,#b6ff8a 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 44px rgba(255,100,220,.52));
+  }
+  #overlay p{
+    max-width:600px;line-height:2.15;
+    font-size:clamp(10.5px,1.25vw,13px);font-weight:300;
+    letter-spacing:.14em;
+    color:rgba(230,200,255,.54);
+  }
+  #overlay p em{font-style:normal;color:rgba(255,150,230,.88);}
+  #overlay p b{font-weight:400;color:rgba(140,230,255,.82);}
+
+  #startBtn{
+    font-family:inherit;
+    font-size:12px;letter-spacing:.34em;text-indent:.34em;
+    color:rgba(255,240,255,.94);
+    background:rgba(110,20,100,.32);
+    border:1px solid rgba(255,140,230,.40);
+    border-radius:999px;
+    padding:16px 50px;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    transition:.45s cubic-bezier(.4,0,.2,1);
+  }
+  #startBtn:hover{
+    border-color:rgba(255,190,245,.95);
+    box-shadow:0 0 54px rgba(255,120,220,.50);
+    background:rgba(180,40,160,.30);
+    transform:translateY(-1px);
+  }
+  #startBtn:active{transform:translateY(0);}
+
+  @keyframes fade{to{opacity:1;}}
+
+  @media (max-width:820px){
+    #title{padding:16px 18px;}
+    #title .sub{display:none;}
+    #stats{padding:16px 18px;font-size:8.5px;}
+    #stats .v{min-width:64px;}
+    #formula{display:none;}
+    #hint{padding:0 18px 190px;}
+    #hint .small{display:none;}
+    #panel{bottom:14px;padding:14px 16px 12px;}
+    .row{gap:9px;margin-bottom:9px;}
+    .row .tag{font-size:8.5px;min-width:34px;letter-spacing:.14em;}
+    .row .num{font-size:9.5px;min-width:56px;}
+    .presetBar{margin-top:10px;padding-top:9px;}
+    .pBtn{padding:5px 9px;font-size:7.5px;letter-spacing:.10em;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<div id="ui">
+  <div id="title">
+    <h1>霓虹花园</h1>
+    <div class="en">JULIA SET · NEON GARDEN</div>
+    <div class="sub">复二次迭代 · 参数空间 · 花朵拓扑</div>
+  </div>
+
+  <div id="stats">
+    <span class="lab">PARAMETER SPACE</span>
+    <div class="row"><span class="k">Re(c)</span><span class="v cr" id="stCr">-0.7269</span></div>
+    <div class="row"><span class="k">Im(c)</span><span class="v ci" id="stCi">0.1889</span></div>
+    <div class="row"><span class="k">迭代</span><span class="v it" id="stIter">256</span></div>
+    <div class="sep"></div>
+    <div class="row"><span class="k">花朵连通</span><span class="v" id="stConn">是</span></div>
+    <div class="row"><span class="k">维数</span><span class="v" id="stDim">≈2.0</span></div>
+    <div class="sep"></div>
+    <div class="row"><span class="k">帧率</span><span class="v" id="stFps">60</span></div>
+  </div>
+
+  <div id="formula">
+    <span class="lab">JULIA SET · COMPLEX DYNAMICS</span>
+    <span class="fn">z</span><sub><span class="nm">n+1</span></sub>
+    <span class="op">=</span>
+    <span class="fn">z</span><sub><span class="nm">n</span></sub><span class="op">²</span>
+    <span class="op">+</span> <span class="kw">c</span>
+    <span class="cm">&nbsp;&nbsp;// c 固定，z₀ 遍历</span><br>
+    <span class="kw">J</span><sub><span class="nm">c</span></sub> <span class="op">=</span>
+    ∂{ <span class="nm">z</span> <span class="op">:</span>
+    <span class="fn">z</span><sub><span class="nm">n</span></sub>
+    <span class="op">→ ∞</span> }
+    <span class="cm">&nbsp;&nbsp;// 逃逸域边界</span><br>
+    <span class="nm">|c| &lt; 2</span>
+    <span class="op">→</span>
+    <span class="fn">连通</span>
+    <span class="op">,</span>
+    <span class="nm">|c| &gt; 2</span>
+    <span class="op">→</span>
+    <span class="kw">Cantor 尘埃</span>
+  </div>
+
+  <div id="hint">
+    <div class="big">拖动滑块 改变花朵</div>
+    <div class="small">
+      <span class="key">滑块</span> 调参<br>
+      <span class="key">空格</span> 暂停动画<br>
+      <span class="key">R</span> 重置参数
+    </div>
+  </div>
+
+  <div id="panel">
+    <div class="row">
+      <span class="tag">Re(c)</span>
+      <input type="range" id="slCr" min="-1.6" max="0.6" value="-0.7269" step="0.0001">
+      <span class="num" id="numCr">-0.7269</span>
+    </div>
+    <div class="row">
+      <span class="tag ci">Im(c)</span>
+      <input type="range" class="ci" id="slCi" min="-1.1" max="1.1" value="0.1889" step="0.0001">
+      <span class="num" id="numCi">0.1889</span>
+    </div>
+    <div class="row">
+      <span class="tag it">迭代</span>
+      <input type="range" class="it" id="slIter" min="64" max="640" value="256" step="16">
+      <span class="num" id="numIter">256</span>
+    </div>
+    <div class="presetBar">
+      <button class="pBtn" data-cr="-0.7269" data-ci="0.1889">螺旋花</button>
+      <button class="pBtn" data-cr="-0.8"    data-ci="0.156">兔耳</button>
+      <button class="pBtn" data-cr="-0.4"    data-ci="0.6">闪电</button>
+      <button class="pBtn" data-cr="0.285"   data-ci="0.01">花瓣</button>
+      <button class="pBtn" data-cr="-0.835"  data-ci="-0.2321">枝晶</button>
+      <button class="pBtn" data-cr="-0.1"    data-ci="0.651">珊瑚</button>
+      <button class="pBtn" data-cr="-0.54"   data-ci="-0.54">星芒</button>
+      <button class="pBtn" data-cr="0.0"     data-ci="0.8">雪花</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <h1>朱利亚集 · 霓虹花园</h1>
+  <p>
+    <b>z ← z² + c</b> 的迭代里，参数 <em>c</em> 决定命运的形状。<br>
+    拖动滑块穿行参数空间 —— 花朵会在连通与碎裂之间起舞，<br>
+    每一次微小的移动，都打开一座全新的霓虹花园。
+  </p>
+  <button id="startBtn">栽 下 花 种</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   0. 基础
+   ========================================================= */
+const canvas = document.getElementById('gl');
+const gl = canvas.getContext('webgl', {
+  antialias: false, alpha: false, depth: false, stencil: false,
+  powerPreference: 'high-performance', preserveDrawingBuffer: false
+}) || canvas.getContext('experimental-webgl');
+
+if (!gl){
+  document.getElementById('overlay').innerHTML =
+    '<h1>WebGL 不可用</h1><p style="color:#e0c8ff">请用支持 WebGL 的现代浏览器打开。</p>';
+  return;
+}
+
+/* =========================================================
+   1. 着色器
+   ========================================================= */
+const VERT_SRC = `
+attribute vec2 a_pos;
+void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }
+`;
+
+const FRAG_SRC = `
+precision highp float;
+
+uniform vec2  u_res;
+uniform vec2  u_c;
+uniform vec2  u_center;
+uniform float u_scale;
+uniform float u_maxIter;
+uniform float u_time;
+uniform float u_pulse;
+
+/* ============================================================
+   霓虹花园调色板
+   深紫 → 品红 → 粉 → 青 → 电光绿 → 白热
+   ============================================================ */
+vec3 neonPalette(float t){
+  t = fract(t);
+
+  vec3 col;
+
+  if (t < 0.12){
+    col = mix(vec3(0.008, 0.000, 0.030),
+              vec3(0.28,  0.02,  0.48),
+              smoothstep(0.0, 0.12, t));
+  } else if (t < 0.28){
+    col = mix(vec3(0.28,  0.02,  0.48),
+              vec3(0.85,  0.08,  0.62),
+              smoothstep(0.12, 0.28, t));
+  } else if (t < 0.44){
+    col = mix(vec3(0.85,  0.08,  0.62),
+              vec3(1.00,  0.42,  0.72),
+              smoothstep(0.28, 0.44, t));
+  } else if (t < 0.58){
+    col = mix(vec3(1.00,  0.42,  0.72),
+              vec3(0.32,  0.90,  1.00),
+              smoothstep(0.44, 0.58, t));
+  } else if (t < 0.72){
+    col = mix(vec3(0.32,  0.90,  1.00),
+              vec3(0.22,  0.98,  0.86),
+              smoothstep(0.58, 0.72, t));
+  } else if (t < 0.86){
+    col = mix(vec3(0.22,  0.98,  0.86),
+              vec3(0.72,  1.00,  0.42),
+              smoothstep(0.72, 0.86, t));
+  } else {
+    col = mix(vec3(0.72,  1.00,  0.42),
+              vec3(1.00,  0.98,  0.90),
+              smoothstep(0.86, 1.0, t));
+  }
+
+  return col;
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
+
+  /* 世界坐标 z₀ */
+  vec2 z = u_center + uv * u_scale;
+  vec2 c = u_c;
+
+  float iter = 0.0;
+  float m2   = 0.0;
+  bool  escaped = false;
+
+  /* ---- 朱利亚迭代 ---- */
+  for (int i = 0; i < 640; i++){
+    if (float(i) >= u_maxIter) break;
+
+    float x2 = z.x * z.x;
+    float y2 = z.y * z.y;
+
+    /* 逃逸检测 */
+    if (x2 + y2 > 256.0){
+      escaped = true;
+      iter = float(i);
+      break;
+    }
+
+    /* z ← z² + c */
+    float ny = 2.0 * z.x * z.y + c.y;
+    z.x = x2 - y2 + c.x;
+    z.y = ny;
+  }
+
+  /* 逃逸最终模长（用于平滑着色） */
+  m2 = z.x * z.x + z.y * z.y;
+
+  vec3 col;
+
+  if (!escaped){
+    /* ---- 集合内部：深紫黑，带极淡内部纹理 ---- */
+    col = vec3(0.006, 0.000, 0.024);
+
+    float inner = length(uv);
+    col += vec3(0.022, 0.000, 0.056) * (1.0 - inner * 0.8) * u_pulse;
+  } else {
+    /* ---- 平滑迭代计数 ---- */
+    float log_zn = 0.5 * log(m2);
+    float nu     = log(log_zn / log(2.0)) / log(2.0);
+    float si     = iter + 1.0 - nu;
+    if (si < 0.0) si = 0.0;
+
+    /* ---- 霓虹映射 ---- */
+    float t = log(1.0 + si * 1.35) * 0.30;
+    t = fract(t + u_time * 0.018 + 0.04);
+
+    col = neonPalette(t);
+
+    /* ---- 边界辉光 ---- */
+    float edge = exp(-si * 0.028);
+    col += vec3(0.28, 0.10, 0.34) * edge * 0.60;
+
+    /* ---- 深层冷光 ---- */
+    float deep = exp(-si * 0.010) * 0.10;
+    col += vec3(0.02, 0.10, 0.18) * deep;
+  }
+
+  /* ---- 霓虹脉冲呼吸 ---- */
+  col *= 1.0 + 0.10 * u_pulse * (1.0 - exp(-length(uv) * 1.6));
+
+  /* ---- 暗角 ---- */
+  float r2 = dot(uv, uv);
+  col *= 1.0 - 0.42 * smoothstep(0.22, 1.15, r2);
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+function compileShader(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(s));
+    return null;
+  }
+  return s;
+}
+
+const vs = compileShader(gl.VERTEX_SHADER, VERT_SRC);
+const fs = compileShader(gl.FRAGMENT_SHADER, FRAG_SRC);
+
+const prog = gl.createProgram();
+gl.attachShader(prog, vs);
+gl.attachShader(prog, fs);
+gl.linkProgram(prog);
+
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+  console.error(gl.getProgramInfoLog(prog));
+}
+
+gl.useProgram(prog);
+
+/* ---- 全屏四边形 ---- */
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1,  1, -1,  -1, 1,
+  -1,  1,  1, -1,   1, 1
+]), gl.STATIC_DRAW);
+
+const aPos = gl.getAttribLocation(prog, 'a_pos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const U = {
+  res     : gl.getUniformLocation(prog, 'u_res'),
+  c       : gl.getUniformLocation(prog, 'u_c'),
+  center  : gl.getUniformLocation(prog, 'u_center'),
+  scale   : gl.getUniformLocation(prog, 'u_scale'),
+  maxIter : gl.getUniformLocation(prog, 'u_maxIter'),
+  time    : gl.getUniformLocation(prog, 'u_time'),
+  pulse   : gl.getUniformLocation(prog, 'u_pulse')
+};
+
+/* =========================================================
+   2. 视图与参数状态
+   ========================================================= */
+const state = {
+  cr: -0.7269,
+  ci:  0.1889,
+  maxIter: 256,
+  centerX: 0.0,
+  centerY: 0.0,
+  scale: 1.35,
+  targetCr: -0.7269,
+  targetCi:  0.1889
+};
+
+const HOME = { cx: 0, cy: 0, scale: 1.35 };
+
+/* =========================================================
+   3. 尺寸
+   ========================================================= */
+const MAX_PIXELS = 680000;
+
+function resize(){
+  const w0 = window.innerWidth;
+  const h0 = window.innerHeight;
+
+  let s = 1;
+  const total = w0 * h0;
+  if (total > MAX_PIXELS) s = Math.sqrt(MAX_PIXELS / total);
+
+  const w = Math.max(1, Math.floor(w0 * s));
+  const h = Math.max(1, Math.floor(h0 * s));
+
+  if (canvas.width !== w || canvas.height !== h){
+    canvas.width  = w;
+    canvas.height = h;
+  }
+  canvas.style.width  = w0 + 'px';
+  canvas.style.height = h0 + 'px';
+
+  gl.viewport(0, 0, w, h);
+}
+
+window.addEventListener('resize', resize);
+resize();
+
+/* =========================================================
+   4. 音频引擎 —— 电子音乐 + 电流滋滋声
+   ========================================================= */
+let actx = null;
+let master = null;
+let delayNode = null;
+let delayFb = null;
+let initialized = false;
+
+/* 电流滋滋声生成器节点 */
+let crackle = null;
+let crackleGain = null;
+
+function initAudio(){
+  if (initialized) return;
+
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e){
+    console.warn('音频不可用', e);
+    return;
+  }
+
+  /* ---- 主输出 ---- */
+  master = actx.createGain();
+  master.gain.value = 0.0001;
+  master.connect(actx.destination);
+  master.gain.exponentialRampToValueAtTime(0.60, actx.currentTime + 4.0);
+
+  /* ---- 反馈延迟（空间感） ---- */
+  delayNode = actx.createDelay(1.5);
+  delayNode.delayTime.value = 0.42;
+
+  const dFilt = actx.createBiquadFilter();
+  dFilt.type = 'lowpass';
+  dFilt.frequency.value = 2400;
+  dFilt.Q.value = 0.6;
+
+  delayFb = actx.createGain();
+  delayFb.gain.value = 0.38;
+
+  delayNode.connect(dFilt);
+  dFilt.connect(delayFb);
+  delayFb.connect(delayNode);
+  delayNode.connect(master);
+
+  /* ---- 电子底噪 drone ---- */
+  createDrone();
+
+  /* ---- 缓慢的琶音 pad ---- */
+  createPad();
+
+  /* ---- 电流滋滋声 ---- */
+  createCrackle();
+
+  /* ---- 周期性电流脉冲 ---- */
+  scheduleCrackleBursts();
+
+  initialized = true;
+}
+
+/* ---------- 低频 drone ---------- */
+function createDrone(){
+  const g = actx.createGain();
+  g.gain.value = 0.72;
+  g.connect(master);
+  g.connect(delayNode);
+
+  const freqs  = [55.00, 82.41, 110.00, 164.81];
+  const gains  = [0.075, 0.055, 0.038, 0.024];
+  const types  = ['sine', 'sine', 'triangle', 'sine'];
+
+  freqs.forEach((f, i) => {
+    const osc = actx.createOscillator();
+    const og  = actx.createGain();
+
+    osc.type = types[i];
+    osc.frequency.value = f;
+    osc.detune.value = (i - 1.5) * 5;
+    og.gain.value = gains[i];
+
+    /* 缓慢 LFO */
+    const lfo = actx.createOscillator();
+    const lg  = actx.createGain();
+    lfo.frequency.value = 0.035 + i * 0.022;
+    lg.gain.value = gains[i] * 0.60;
+    lfo.connect(lg);
+    lg.connect(og.gain);
+    lfo.start();
+
+    osc.connect(og);
+    og.connect(g);
+    osc.start();
+  });
+}
+
+/* ---------- 缓慢琶音 pad ---------- */
+function createPad(){
+  const filt = actx.createBiquadFilter();
+  filt.type = 'lowpass';
+  filt.frequency.value = 1100;
+  filt.Q.value = 4.0;
+
+  const g = actx.createGain();
+  g.gain.value = 0.0001;
+  g.connect(master);
+  g.connect(delayNode);
+  filt.connect(g);
+
+  /* 小调五声音阶 */
+  const notes = [220.00, 261.63, 311.13, 392.00, 466.16];
+
+  notes.forEach((f, i) => {
+    const osc = actx.createOscillator();
+    const og  = actx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.value = f;
+    osc.detune.value = (Math.random() - 0.5) * 8;
+    og.gain.value = 0.028;
+
+    const lfo = actx.createOscillator();
+    const lg  = actx.createGain();
+    lfo.frequency.value = 0.02 + Math.random() * 0.04;
+    lg.gain.value = 0.025;
+    lfo.connect(lg);
+    lg.connect(og.gain);
+    lfo.start();
+
+    osc.connect(og);
+    og.connect(filt);
+    osc.start();
+  });
+
+  /* 滤波器缓慢扫动 */
+  const fLfo = actx.createOscillator();
+  const fLg  = actx.createGain();
+  fLfo.frequency.value = 0.014;
+  fLg.gain.value = 480;
+  fLfo.connect(fLg);
+  fLg.connect(filt.frequency);
+  fLfo.start();
+
+  g.gain.exponentialRampToValueAtTime(0.44, actx.currentTime + 10);
+}
+
+/* ---------- 电流滋滋声 ---------- */
+function createCrackle(){
+  /* 白噪声源 */
+  const bufSize = Math.floor(actx.sampleRate * 2);
+  const buffer  = actx.createBuffer(1, bufSize, actx.sampleRate);
+  const data    = buffer.getChannelData(0);
+
+  /* 用稀疏的尖峰模拟电流 */
+  for (let i = 0; i < bufSize; i++){
+    data[i] = (Math.random() * 2 - 1) * 0.12;
+  }
+
+  const src = actx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+
+  /* 高通：过滤低频，保留滋滋声 */
+  const hp = actx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 3200;
+
+  /* 峰值滤波器：强化电流质感 */
+  const pk = actx.createBiquadFilter();
+  pk.type = 'peaking';
+  pk.frequency.value = 6500;
+  pk.Q.value = 1.2;
+  pk.gain.value = 8;
+
+  crackleGain = actx.createGain();
+  crackleGain.gain.value = 0.0001;
+
+  src.connect(hp);
+  hp.connect(pk);
+  pk.connect(crackleGain);
+  crackleGain.connect(master);
+  crackleGain.connect(delayNode);
+
+  src.start();
+
+  /* 慢慢淡入电流底噪 */
+  crackleGain.gain.exponentialRampToValueAtTime(0.038, actx.currentTime + 8);
+}
+
+/* ---------- 周期性的电流脉冲 ---------- */
+function scheduleCrackleBursts(){
+  function burst(){
+    if (!initialized || !actx) return;
+
+    const now = actx.currentTime;
+
+    /* 短促的电流爆发 */
+    const osc = actx.createOscillator();
+    const g   = actx.createGain();
+    const bp  = actx.createBiquadFilter();
+
+    /* 随机高频 */
+    const baseF = 1800 + Math.random() * 4200;
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(baseF, now);
+    osc.frequency.exponentialRampToValueAtTime(baseF * 0.35, now + 0.16);
+
+    bp.type = 'bandpass';
+    bp.frequency.value = baseF * 1.2;
+    bp.Q.value = 3.5;
+
+    const v = 0.020 + Math.random() * 0.032;
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(v, now + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+    osc.connect(bp);
+    bp.connect(g);
+    g.connect(master);
+    g.connect(delayNode);
+
+    osc.start(now);
+    osc.stop(now + 0.2);
+
+    /* 随机间隔：0.4 ~ 2.6 秒 */
+    setTimeout(burst, 400 + Math.random() * 2200);
+  }
+
+  setTimeout(burst, 1200);
+}
+
+/* ---------- 参数变化的音效 ---------- */
+function playParamTick(cr, ci){
+  if (!initialized || !actx) return;
+
+  const now = actx.currentTime;
+
+  /* c 的模长决定音高 */
+  const mag = Math.sqrt(cr * cr + ci * ci);
+  const ang = Math.atan2(ci, cr);
+
+  /* 音高映射到五声音阶 */
+  const scale = [0, 2, 4, 7, 9];
+  const idx = Math.floor((ang + Math.PI) / (Math.PI * 2) * 5) % 5;
+  const oct = Math.floor(mag * 3);
+
+  const freq = 261.63 * Math.pow(2, (scale[idx] + oct * 12) / 12);
+
+  /* 短促的电子音 */
+  const osc = actx.createOscillator();
+  const g   = actx.createGain();
+  const lp  = actx.createBiquadFilter();
+
+  osc.type = Math.random() < 0.5 ? 'square' : 'sawtooth';
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.linearRampToValueAtTime(freq * 1.008, now + 0.10);
+
+  lp.type = 'lowpass';
+  lp.frequency.value = freq * 6;
+  lp.Q.value = 2.5;
+
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.048, now + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+  osc.connect(lp);
+  lp.connect(g);
+  g.connect(master);
+  g.connect(delayNode);
+
+  osc.start(now);
+  osc.stop(now + 0.22);
+}
+
+/* ---------- 入场音效 ---------- */
+function playEnterSound(){
+  if (!initialized || !actx) return;
+
+  const now = actx.currentTime;
+  const notes = [130.81, 196.00, 261.63, 392.00, 523.25, 784.00];
+
+  notes.forEach((f, i) => {
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    const lp = actx.createBiquadFilter();
+
+    o.type = 'sawtooth';
+    o.frequency.value = f;
+
+    lp.type = 'lowpass';
+    lp.frequency.value = f * 4;
+    lp.Q.value = 3;
+
+    const t0 = now + i * 0.15;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.038, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.6);
+
+    o.connect(lp);
+    lp.connect(g);
+    g.connect(master);
+    g.connect(delayNode);
+
+    o.start(t0);
+    o.stop(t0 + 2.8);
+  });
+}
+
+/* =========================================================
+   5. 交互 —— 滑块
+   ========================================================= */
+const slCr   = document.getElementById('slCr');
+const slCi   = document.getElementById('slCi');
+const slIter = document.getElementById('slIter');
+const numCr  = document.getElementById('numCr');
+const numCi  = document.getElementById('numCi');
+const numIter= document.getElementById('numIter');
+
+let lastTickTime = 0;
+
+function updateCr(){
+  state.targetCr = parseFloat(slCr.value);
+  numCr.textContent = state.targetCr.toFixed(4);
+
+  /* 限频的音效 */
+  const now = performance.now();
+  if (now - lastTickTime > 90){
+    lastTickTime = now;
+    playParamTick(state.targetCr, state.targetCi);
+  }
+}
+
+function updateCi(){
+  state.targetCi = parseFloat(slCi.value);
+  numCi.textContent = state.targetCi.toFixed(4);
+
+  const now = performance.now();
+  if (now - lastTickTime > 90){
+    lastTickTime = now;
+    playParamTick(state.targetCr, state.targetCi);
+  }
+}
+
+function updateIter(){
+  state.maxIter = parseInt(slIter.value, 10);
+  numIter.textContent = state.maxIter;
+}
+
+slCr.addEventListener('input', updateCr);
+slCi.addEventListener('input', updateCi);
+slIter.addEventListener('input', updateIter);
+
+/* ---------- 预设按钮 ---------- */
+document.querySelectorAll('.pBtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const cr = parseFloat(btn.dataset.cr);
+    const ci = parseFloat(btn.dataset.ci);
+
+    slCr.value = cr;
+    slCi.value = ci;
+
+    state.targetCr = cr;
+    state.targetCi = ci;
+
+    numCr.textContent = cr.toFixed(4);
+    numCi.textContent = ci.toFixed(4);
+
+    playParamTick(cr, ci);
+  });
+});
+
+/* ---------- 键盘 ---------- */
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space'){
+    e.preventDefault();
+    if (initialized && actx){
+      if (actx.state === 'running') actx.suspend();
+      else actx.resume();
+    }
+  } else if (e.code === 'KeyR'){
+    slCr.value = -0.7269;
+    slCi.value =  0.1889;
+    state.targetCr = -0.7269;
+    state.targetCi =  0.1889;
+    numCr.textContent = '-0.7269';
+    numCi.textContent = ' 0.1889';
+    state.centerX = HOME.cx;
+    state.centerY = HOME.cy;
+    state.scale   = HOME.scale;
+  }
+});
+
+/* ---------- 拖动 / 滚轮 ---------- */
+let dragging = false, lastX = 0, lastY = 0;
+
+canvas.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  try { canvas.setPointerCapture(e.pointerId); } catch(_){}
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+
+  const rect = canvas.getBoundingClientRect();
+  state.centerX -= dx / rect.height * state.scale;
+  state.centerY += dy / rect.height * state.scale;
+});
+
+function endDrag(e){
+  dragging = false;
+  try { canvas.releasePointerCapture(e.pointerId); } catch(_){}
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+
+  const rect = canvas.getBoundingClientRect();
+  const xf = (e.clientX - rect.left) / rect.width;
+  const yf = (e.clientY - rect.top)  / rect.height;
+  const aspect = rect.width / rect.height;
+
+  const uvx = (xf - 0.5) * aspect;
+  const uvy = (0.5 - yf);
+
+  const wx = state.centerX + uvx * state.scale;
+  const wy = state.centerY + uvy * state.scale;
+
+  const factor = Math.pow(1.0016, -e.deltaY);
+  let ns = state.scale / factor;
+  if (ns < 0.0008) ns = 0.0008;
+  if (ns > 4.0)    ns = 4.0;
+
+  state.centerX = wx - uvx * ns;
+  state.centerY = wy - uvy * ns;
+  state.scale = ns;
+}, { passive: false });
+
+/* =========================================================
+   6. UI 更新
+   ========================================================= */
+const stCr   = document.getElementById('stCr');
+const stCi   = document.getElementById('stCi');
+const stIter = document.getElementById('stIter');
+const stConn = document.getElementById('stConn');
+const stDim  = document.getElementById('stDim');
+const stFps  = document.getElementById('stFps');
+
+let uiAcc = 0;
+let fpsAcc = 0, fpsCount = 0;
+
+/* 初始化 UI */
+numCr.textContent = state.cr.toFixed(4);
+numCi.textContent = state.ci.toFixed(4);
+numIter.textContent = state.maxIter;
+
+/* =========================================================
+   7. 主循环
+   ========================================================= */
+let lastTS = 0;
+let startTime = 0;
+
+function render(now){
+  requestAnimationFrame(render);
+
+  if (!lastTS){ lastTS = now; startTime = now; return; }
+
+  let dt = (now - lastTS) / 1000;
+  lastTS = now;
+  if (dt > 0.1) dt = 0.1;
+  if (dt < 0)   dt = 0;
+
+  /* FPS */
+  if (dt > 0){ fpsAcc += 1 / dt; fpsCount++; }
+
+  /* ---- 参数平滑过渡 ---- */
+  state.cr += (state.targetCr - state.cr) * Math.min(1, dt * 9);
+  state.ci += (state.targetCi - state.ci) * Math.min(1, dt * 9);
+
+  const t = (now - startTime) * 0.001;
+
+  /* 呼吸脉冲 */
+  const pulse = 0.55 + 0.45 * Math.sin(t * 1.35);
+
+  /* ---- 上传 Uniform ---- */
+  gl.uniform2f(U.res, canvas.width, canvas.height);
+  gl.uniform2f(U.c, state.cr, state.ci);
+  gl.uniform2f(U.center, state.centerX, state.centerY);
+  gl.uniform1f(U.scale, state.scale);
+  gl.uniform1f(U.maxIter, state.maxIter);
+  gl.uniform1f(U.time, t);
+  gl.uniform1f(U.pulse, pulse);
+
+  /* ---- 绘制 ---- */
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  /* ---- UI 限频更新 ---- */
+  uiAcc += dt;
+  if (uiAcc > 0.12){
+    uiAcc = 0;
+
+    stCr.textContent   = state.cr.toFixed(4);
+    stCi.textContent   = state.ci.toFixed(4);
+    stIter.textContent = state.maxIter;
+
+    /* 连通性判定：|c| < 2 时朱利亚集连通 */
+    const mag = Math.sqrt(state.cr * state.cr + state.ci * state.ci);
+    stConn.textContent = mag < 2.0 ? '是' : '否';
+
+    /* 维数估计：越接近边界越高 */
+    const d = 1.0 + Math.min(1.0, mag / 2.0);
+    stDim.textContent = '≈' + d.toFixed(2);
+
+    if (fpsCount > 5){
+      stFps.textContent = (fpsAcc / fpsCount).toFixed(0);
+      fpsAcc = 0;
+      fpsCount = 0;
+    }
+  }
+}
+
+/* =========================================================
+   8. 启动
+   ========================================================= */
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+
+/* 首帧 */
+gl.clearColor(0.008, 0, 0.024, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.uniform2f(U.res, canvas.width, canvas.height);
+gl.uniform2f(U.c, state.cr, state.ci);
+gl.uniform2f(U.center, state.centerX, state.centerY);
+gl.uniform1f(U.scale, state.scale);
+gl.uniform1f(U.maxIter, state.maxIter);
+gl.uniform1f(U.time, 0);
+gl.uniform1f(U.pulse, 1.0);
+gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+startBtn.addEventListener('click', () => {
+  overlay.classList.add('hide');
+  initAudio();
+
+  setTimeout(() => { playEnterSound(); }, 260);
+
+  lastTS = 0;
+}, { once: true });
+
+requestAnimationFrame(render);
+
+})();
+</script>
+</body>
+</html>
